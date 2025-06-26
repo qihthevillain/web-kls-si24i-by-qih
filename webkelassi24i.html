@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Dashboard Kelas SI24I</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: url('logokelas.jpg') no-repeat center center fixed;
+      background-size: cover;
+      font-family: Arial, sans-serif;
+    }
+    .login-box, #dashboard {
+      display: none;
+    }
+    .login-box {
+      background-color: rgba(255, 255, 255, 0.95);
+      padding: 30px;
+      border-radius: 10px;
+      width: 300px;
+      margin: 100px auto;
+      text-align: center;
+    }
+    input {
+      width: 90%;
+      padding: 10px;
+      margin: 10px 0;
+    }
+    button {
+      padding: 10px 20px;
+      background-color: #0b4f6c;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+    .container {
+      display: flex;
+      max-width: 1000px;
+      margin: 80px auto;
+      background-color: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      overflow: hidden;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #cce7e8;
+      padding: 30px 20px;
+    }
+    .sidebar h2 {
+      font-size: 20px;
+      color: #0b3b61;
+      margin-bottom: 20px;
+    }
+    .sidebar button {
+      display: block;
+      width: 100%;
+      margin-bottom: 15px;
+      padding: 10px;
+      font-weight: bold;
+      background-color: #0b3b61;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+    }
+    .sidebar button:hover {
+      background-color: #082e47;
+    }
+    .content {
+      flex-grow: 1;
+      padding: 40px;
+    }
+    .content h1 {
+      color: #0b3b61;
+      margin-bottom: 20px;
+    }
+    .content .box {
+      background-color: #f9f9f9;
+      padding: 20px;
+      border-radius: 10px;
+      height: 300px;
+      overflow-y: auto;
+    }
+    button.logout {
+      margin-top: 30px;
+      background-color: #a33;
+    }
+    button.logout:hover {
+      background-color: #822;
+    }
+    #error, #registerError {
+      color: red;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+
+<!-- FORM LOGIN -->
+<div class="login-box" id="login-box">
+  <h2>Login</h2>
+  <input type="text" id="username" placeholder="Username" /><br>
+  <input type="password" id="password" placeholder="Password" /><br>
+  <button onclick="login()">Login</button>
+  <button onclick="showRegister()">Daftar</button>
+  <p id="error"></p>
+</div>
+
+<!-- FORM REGISTER -->
+<div class="login-box" id="register-box" style="display:none;">
+  <h2>Daftar Akun Baru</h2>
+  <form action="register.php" method="POST">
+    <input type="text" name="username" placeholder="Username Baru" required /><br>
+    <input type="password" name="password" placeholder="Password Baru" required /><br>
+    <button type="submit" style="margin-bottom: 10px;">Daftar</button>
+  </form>
+  <button onclick="showLogin()">Kembali ke Login</button>
+</div>
+
+<!-- DASHBOARD -->
+ <div id="dashboard">
+  <div class="container">
+    <div class="sidebar">
+      <h2>Menu</h2>
+      <button onclick="showContent('artikel')">Artikel Ketua Kelas</button>
+      <button onclick="showContent('anggota')">Daftar Anggota</button>
+      <button onclick="showContent('dokumentasi')">Dokumentasi</button>
+      <button class="logout" onclick="logout()">Logout</button>
+    </div>
+    <div class="content">
+      <h1 id="welcomeText">Selamat datang</h1>
+      <div class="box" id="contentBox">
+        <p>Silakan pilih menu di samping untuk melihat informasi.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+
+  document.getElementById('login-box').style.display = 'block';
+
+  function showRegister() {
+    document.getElementById('login-box').style.display = 'none';
+    document.getElementById('register-box').style.display = 'block';
+  }
+
+  function showLogin() {
+    document.getElementById('register-box').style.display = 'none';
+    document.getElementById('login-box').style.display = 'block';
+  }
+function register() {
+  const newUsername = document.getElementById('newUsername')?.value.trim();
+  const newPassword = document.getElementById('newPassword')?.value.trim();
+  const registerError = document.getElementById('registerError');
+
+  if (newUsername && newPassword) {
+    const exists = users.find(u => u.username === newUsername);
+    if (exists) {
+      registerError.textContent = "Username sudah terdaftar!";
+    } else {
+      users.push({ username: newUsername, password: newPassword });
+      alert("Akun berhasil dibuat!");
+      showLogin();
+    }
+  } else {
+    registerError.textContent = "Isi semua field!";
+  }
+}
+function login() {
+  const user = document.getElementById('username').value.trim();
+  const pass = document.getElementById('password').value.trim();
+  const error = document.getElementById('error');
+
+  const formData = new FormData();
+  formData.append("username", user);
+  formData.append("password", pass);
+
+  fetch("login.php", {
+    method: "POST",
+    body: formData
+  })
+  .then(response => response.json())
+  .then(data => {
+    if (data.success) {
+      document.getElementById('login-box').style.display = 'none';
+      document.getElementById('dashboard').style.display = 'block';
+      document.getElementById('welcomeText').innerHTML = `Selamat datang, <strong>${data.username}</strong>`;
+      error.textContent = "";
+    } else {
+      error.textContent = data.message || "Username atau password salah!";
+    }
+  })
+  .catch(() => {
+    error.textContent = "Terjadi kesalahan saat login.";
+  });
+
+}
+  function logout() {
+    document.getElementById('dashboard').style.display = 'none';
+    document.getElementById('login-box').style.display = 'block';
+    document.getElementById('username').value = "";
+    document.getElementById('password').value = "";
+    document.getElementById('error').textContent = "";
+  }
+
+  function showContent(page) {
+      const contentBox = document.getElementById('contentBox');
+      if (page === 'artikel') {
+        contentBox.innerHTML = `
+          <h3>KETUA KELAS SI24I!!!</h3>
+
+<div style="display: flex; justify-content: center; margin: 20px 0;">
+  <video autoplay loop style="width: 290px; border-radius: 10px;">
+    <source src="faqih.mp4" type="video/mp4">
+    Browser Anda tidak mendukung tag video.
+  </video>
+</div>
+<div style="max-width: 700px; margin: auto; text-align: justify; line-height: 1.6; font-family: 'Rockwell', serif;">
+  <p>Perkenalkan Nama saya <span style="font-weight: bold; color: #000;">Muhammad Faqih Abkhari</span>. Saya berasal dari Lombok Timur, sebuah daerah yang penuh keindahan dan nilai-nilai kekeluargaan. Saat ini, saya tinggal di Sukabumi karena saya sedang menempuh pendidikan di Universitas Nusaputra Sukabumi. Saya merasa bersyukur karena mendapat kesempatan untuk melanjutkan kuliah dengan beasiswa.</p>
+
+  <p>Di kampus ini, saya mengambil jurusan Sistem Informasi dan memilih untuk bergabung di kelas internasional. Saya ingin memperluas wawasan dan mempersiapkan diri menghadapi dunia kerja yang semakin global.</p>
+
+  <p>Sebagai mahasiswa, saya tidak hanya fokus pada akademik. Saya juga dipercaya menjadi ketua kelas, sebuah tanggung jawab yang saya jalankan dengan sungguh-sungguh. Bagi saya, menjadi ketua kelas bukan hanya soal memimpin, tapi juga tentang belajar berkomunikasi, bekerja sama, dan menjadi jembatan antara dosen dan teman-teman.</p>
+
+  <p>Perjalanan ini masih panjang, tapi saya yakin dengan usaha dan doa, saya bisa meraih apa yang saya cita-citakan di masa depan.</p>
+</div>
+
+        `;
+      } else if (page === 'anggota') {
+        contentBox.innerHTML = `
+        <div style="font-family: 'Rockwell', serif; color: black; line-height: 1.6;">
+          <h3>Daftar Anggota Kelas SI24I</h3>
+          <ul>
+            <li>Muhammad faqih abkhari_20240050094</li>
+            <li>Jevon Tiandi Kusuma Lasi_20240050096 </li>
+            <li>Helmi Rosyadi Harahap_20240050030</li>
+            <li>Marvel Joshua Bunadi_20240050043</li>
+            <li>Agisna Rahmatiha Putri_20240050050</li>
+            <li>Agnes Jesica Bay Ea_20240050079</li>
+            <li>Alia Maharani_20240050045</li>
+            <li>Annisa Nurullaili Hidayatul Husna_20240050112</li>
+            <li>Annisatul Qomariah_20240050078</li>
+            <li>Awab Mohammed Mustafa Elsheikh_20240050132</li>
+            <li>Meli Meliani_20240050039</li>
+            <li>Jelvin Putra Hulu_20240050129</li>
+            <li>Kania Hermalisa_20240050039</li>
+            <li>Nelson Preire Ximenes Barreto_20240050150</li>
+            <li>Nurzira oriza_20240050049</li>
+            <li>ObiohaEvans Nwabugo_20240050153</li>
+            <li>Obiwulu Peter Zimuzochukwu_20240050154</li>
+            <li>Onwenu Oluebube Daniel_20240050142</li>
+            <li>Onyeaghala Arinze Kennedy_20240050135</li>
+            <li>Rabia Adwiah Kilwarany_20240050120</li>
+            <li>Resi Ajhari_20240050028</li>
+            <li>Saghiru Mohamed Rashid_20240050149</li>
+            <li>Sikuta Mubiana_20240050148</li>
+            <li>Siti Nurhaliamah_20240050052</li>
+            <li>Syahda Ishmatuka Hijrin_20240050029</li>
+            <li>Tauf Alzani_20240050109</li>
+            <li>Ukasonya Desmond Chibuke_20240050552</li>
+            <li>Yohanes Aryanto Siradapu Sogen_20240050101</li>
+            <li>Yohanes Paulus Gekeng Koting_20240050102</li>
+            <li>Zulpa Nurul Pajrin_20240050048</li>
+          </ul>
+        `;
+    } else if (page === 'dokumentasi') {
+  contentBox.innerHTML = `
+    <div style="font-family: 'Rockwell', serif; color: black; line-height: 1.6;">
+      <h3>Dokumentasi Kegiatan Kelas SI24I</h3>
+      <p>Berikut beberapa dokumentasi kegiatan Kmiiiii Guyss^^:</p>
+      <ul style="list-style: none; padding: 0;">
+        <li style="margin-bottom: 20px;">📸 Kelas SI24I BERBAGIIIIII:</li>
+        <li style="margin-bottom: 30px;">
+          <video width="320" controls style="border-radius: 10px;">
+            <source src="0313.mp4" type="video/mp4">
+            Browser Anda tidak mendukung video.
+          </video>
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Kelas Pak Falen<br>
+          <img src="kelas pak falen.jpg" alt="Kelas Pak Falen" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Fotbarr Saat Puncak HABERMAA^^<br>
+          <img src="puncak haberma.jpg" alt="Puncak HABERMA" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Kelas Terakhir Bu FEBRI:(<br>
+          <img src="kelas bu febri.jpg" alt="Lomba RTL" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Bukber Perdanan Kelas SI24I <br>
+          <img src="fotbar bukber.jpg" alt="Bukber RTL" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+         <li style="margin-bottom: 30px;">📸 KITAA MAKAAAN NASI PADAANG SAAT BUKBER^^<br>
+          <img src="makan nasi padang.jpg" alt="makan nasi padang" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Anak Anak Interrr^^<br>
+          <img src="inter.jpg" alt="anak anak interr" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Riviw skin nuZput ^^<br>
+          <img src="skin nusput.jpg" alt="skin nusput" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+         <li style="margin-bottom: 30px;">📸 Kelas Basis Data^^<br>
+          <img src="basis data.jpg" alt="skin nusput" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+         <li style="margin-bottom: 30px;">📸 Kelas Bu Arnyy di laboraturium guys^^<br>
+          <img src="kls bu arny.jpg" alt="kls bu arny" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 Kelas Bu Riskaa SIM<br>
+          <img src="kls bu riska SIM.jpg" alt="skin nusput" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 GEBYAR RAMADHANNN<br>
+          <img src="GEBYAR.jpg" alt="skin nusput" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 INI PAS AWAL AWAL MASUK WWKKWKWKKWWKK<br>
+          <img src="MABIM.jpg" alt="skin nusput" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+        
+        <li style="margin-bottom: 20px;">📸 GELOOOOOOO KETUA KELAS KAMIII^^:</li>
+        <li style="margin-bottom: 30px;">
+          <video width="320" controls style="border-radius: 10px;">
+            <source src="QIH.mp4" type="video/mp4">
+            Browser Anda tidak mendukung video.
+          </video>
+        </li>
+
+        <li style="margin-bottom: 30px;">📸 INIII SAAT DIES NATALIS CUY<br>
+          <img src="herey.jpg" alt="Kelas RTL" width="320" style="margin-top: 5px; border-radius: 10px;">
+        </li>
+      </ul>
+    </div>
+  `;
+}
+    }
+  </script>
+</body>
+</html>
